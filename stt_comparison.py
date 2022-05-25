@@ -1,16 +1,10 @@
 import string
 import re
 import config
-import spacy
 from itertools import islice
-from spacy.matcher import PhraseMatcher
 import re
 import difflib
 from difflib import SequenceMatcher
-PUNCT_TO_REMOVE = string.punctuation
-path = "./en_core_web_sm-3.0.0"
-nlp = spacy.load(path)
-all_stop_words =nlp.Defaults.stop_words
 def expanded_words(phrase):
     phrase = re.sub(r"n\'t", " not", phrase)
     phrase = re.sub(r"\'re", " are", phrase)
@@ -26,20 +20,17 @@ def remove_extraspace(text):
     space_pattern = r'\s+'
     text=re.sub(pattern=space_pattern,repl=" ",string=text)
     return text
-
-
 def text_clean(text):
     try:
         # removing non asci charecters
         text = re.sub(r'[^\x00-\x7F]+', ' ', text)
         # text=re.sub('[^A-Za-z0-9]+', '', text)
+        # removing newline enter & tab
+        text = text.replace('\\n', ' ').replace('\n', ' ').replace('\t',' ').replace('\\', ' ')
         text = text.replace(",", "").replace('. ', ' ').replace('?', '')
-
         # lower case
         text = text.lower()
-
         # text = re.sub(r'(\b[a-z])\.(?=[a-z]\b|\s|$)', r'\1', text)
-
         # Removing Extra SPace
         text = remove_extraspace(text)
         return text
@@ -47,38 +38,30 @@ def text_clean(text):
         print(e)
     except Exception as e:
         print(e)
-
-def sentence_comparison(cvp_text,ref):
+"""def sentence_comparison(cvp_text,ref):
     try:
+        print("NLP load",type(nlp))
         input_list = text_clean(cvp_text).split()
-        print("cleaned_input_list", input_list)
-        print("******")
         phrases = list(window(input_list))
-        print("4 word window phrases",phrases)
         patterns = [nlp(text) for text in phrases]
-        #print(patterns)
-        print("uncleaned texts***\n",ref)
         sentence = nlp(text2int(expanded_words(text_clean(ref))))
-        #sentence = nlp(text2int(text_clean(ref)))
-        print("stt_sentence****\n",sentence)
         phrase_matcher=PhraseMatcher(nlp.vocab, attr="LOWER")
         phrase_matcher.add("VG", None, *patterns)
         matched_phrases = phrase_matcher(sentence)
         extracted = extract_phrase_match(matched_phrases,sentence)
-        print("extracted",extracted)
         score = SequenceMatcher(None, input_list, str(extracted).split()).ratio()
         score = (round(score,2))*100
+        print(score)
         compare_words(input_list,extracted)
         confidence_rate = confidence_rating(score)
-        print(cvp_text)
-        output_dict = {"cvp_text": str(cvp_text),
-                       "stt_text": str(extracted),
-                       "confidence_score": score,
-                       "confidence_rate" : confidence_rate}
+        output_dict = {"validatedText": str(cvp_text),
+                       "spokenText": str(extracted),
+                       "confidenceScore": score,
+                       "confidenceRate" : confidence_rate}
 
         return output_dict
     except Exception as e:
-        print(e)
+        print(e)"""
 #converting text to int values
 def text2int(textnum, numwords={}):
     if not numwords:
@@ -187,9 +170,9 @@ def extract_phrase_match(matched_phrases,sentence):
         config.prev_start = start
         config.prev_end = end
 
-        print("Match Count :" + str(config.match_count))
-        print("Start :" + str(config.actual_start))
-        print("End :" + str(config.actual_end))
+        #print("Match Count :" + str(config.match_count))
+        #print("Start :" + str(config.actual_start))
+        #print("End :" + str(config.actual_end))
 
     if config.max_text_loc == "":
         config.max_text_loc = str(config.actual_start) + ":" + str(config.actual_end) + ":" + str(config.match_count)
@@ -202,4 +185,4 @@ def extract_phrase_match(matched_phrases,sentence):
 def compare_words(input_list,extracted):
     d = difflib.Differ()
     diff = d.compare(input_list, str(extracted).split())
-    print('\n'.join(diff))
+    #print('\n'.join(diff))

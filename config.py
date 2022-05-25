@@ -9,5 +9,5 @@ max_text_loc=""
 
 
 #defined thershold_values
-confidence_score_read =65
-confidence_score_inter = 30
+confidence_score_read =75
+confidence_score_inter = 50
